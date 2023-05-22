@@ -1,9 +1,11 @@
 ﻿using Assignment_1.Data;
 using Assignment_1.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -72,6 +74,88 @@ namespace Assignment_1.Controllers
               signingCredentials: signIn);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        [HttpGet]
+        [Route("GetAllEmployee"), Authorize(Roles = "Admin")]
+        public ActionResult<List<Emplyoee>> GetAllEmployee()
+        {
+            try
+            {
+                List<Emplyoee> EmpList = _dbContext.Employee.ToList<Emplyoee>();
+                return Ok(EmpList);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("AddEmployee"), Authorize(Roles = "Admin")]
+        public ActionResult AddEmployee(Emplyoee emp)
+        {
+            try
+            {
+                _dbContext.Employee.Add(emp);
+                _dbContext.SaveChanges();
+                return Ok("Employee Added Successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message.ToString());
+            }
+        }
+        [HttpGet]
+        [Route("GetEmployee/{Id}")]
+        public ActionResult<Emplyoee> GetEmployeeById(int Id)
+        {
+            try
+            {
+                Emplyoee result = _dbContext.Employee.FirstOrDefault(x => x.Id == Id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message.ToString());
+            }
+        }
+
+        [HttpPut]
+        [Route("UpdateEmployee"), Authorize(Roles = "Admin")]
+        public ActionResult UpdateEmployee(Emplyoee emp)
+        {
+            try
+            {
+                var Result = _dbContext.Employee.Where(x => x.Id == emp.Id).FirstOrDefault();
+                Result.Name = emp.Name;
+                Result.Email = emp.Email;
+                Result.Password = emp.Password;
+                Result.Role = emp.Role;
+                _dbContext.SaveChanges();
+                return Ok("Employee Added Successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message.ToString());
+            }
+        }
+
+        [HttpDelete]
+        [Route("DeleteEmplyee/{Id}"), Authorize(Roles = "Admin")]
+        public ActionResult DeleteEmployee(int Id)
+        {
+            try
+            {
+                var result = _dbContext.Employee.Where(x => x.Id == Id).FirstOrDefault();
+                _dbContext.Employee.Remove(result);
+                _dbContext.SaveChanges();
+                return Ok("Employee Deleted Successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message.ToString());
+            }
         }
 
     }
